@@ -10,7 +10,7 @@ dotenv.config()
 app.use(cors())
 app.use(express.json())
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const port = process.env.PORT
 const uri = process.env.MONGODB_URI;
@@ -43,6 +43,13 @@ async function run() {
         app.get('/sports', async (req, res) => {
             const sports = await sportsCollection.find().toArray();
             res.send(sports);
+        });
+
+        //find one sport
+        app.get('/sports/:id', async (req, res) => {
+            const { id } = req.params;
+            const sport = await sportsCollection.findOne({ _id: new ObjectId(id) });
+            res.send(sport);
         });
 
         await client.db("admin").command({ ping: 1 });
