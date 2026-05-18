@@ -29,17 +29,21 @@ async function run() {
     try {
         await client.connect();
 
-        const db = client.db("sport-nest");
+        const db = client.db("sport-nest-server");
         const sportsCollection = db.collection("sports");
 
         //add facility data to database
-       app.post('/sports', async (req, res) => {
-        const sport = req.body;
-        const result = await sportsCollection.insertOne(sport);
-        res.send(result);
-       });
+        app.post('/sports', async (req, res) => {
+            const sport = req.body;
+            const result = await sportsCollection.insertOne(sport);
+            res.send(result);
+        });
 
-
+        //find all sports
+        app.get('/sports', async (req, res) => {
+            const sports = await sportsCollection.find().toArray();
+            res.send(sports);
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
