@@ -95,6 +95,12 @@ async function run() {
             res.send(result);
         });
 
+        //user booking list find
+        app.get('/bookings/:userId', async (req, res) => {
+            const { userId } = req.params;
+            const bookings = await bookingCollection.find({ userId: userId }).toArray();
+            res.send(bookings);
+        })
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
