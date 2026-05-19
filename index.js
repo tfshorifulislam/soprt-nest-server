@@ -1,5 +1,5 @@
-const dns = require("node:dns");
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
+// const dns = require("node:dns");
+// dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const express = require('express')
 const app = express()
@@ -45,8 +45,10 @@ const verifyToken = async (req, res, next) => {
         return res.status(401).send({ message: 'Unauthorized' });
     }
 
+
     try {
         const { payload } = await jwtVerify(tokenParts, JWKS)
+        req.user = payload;
         console.log('payload', payload);
         next();
     }
@@ -59,17 +61,16 @@ const verifyToken = async (req, res, next) => {
 }
 
 
-
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
 
         const db = client.db("sport-nest-server");
         const sportsCollection = db.collection("sports");
         const bookingCollection = db.collection("bookings");
 
         //add facility data to database
-        app.post('/sports', async (req, res) => {
+        app.post('/sports',  async (req, res) => {
             const sport = req.body;
             const result = await sportsCollection.insertOne(sport);
             res.send(result);
@@ -82,14 +83,14 @@ async function run() {
         });
 
         //find one sport
-        app.get('/sports/:id', verifyToken, async (req, res) => {
+        app.get('/sports/:id', async (req, res) => {
             const { id } = req.params;
             const sport = await sportsCollection.findOne({ _id: new ObjectId(id) });
             res.send(sport);
         });
 
         //booking system
-        app.post('/bookings', async (req, res) => {
+        app.post('/bookings',async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking);
             res.send(result);
@@ -101,6 +102,24 @@ async function run() {
             const bookings = await bookingCollection.find({ userId: userId }).toArray();
             res.send(bookings);
         })
+
+
+        //delete booking from my bookings
+        app.delete('/bookings/:id', async (req, res) => {
+            const { id } = req.params;
+            const booking = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(booking);
+        })
+
+        //manage facilities update
+        app.patch('/sports/:id', async (req, res) => {
+            const { id } = req.params;
+            const sport = req.body;
+            const result = await sportsCollection.updateOne({ _id: new ObjectId(id) }, { $set: sport });
+            res.send(result);
+        })
+
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
