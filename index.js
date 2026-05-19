@@ -11,11 +11,10 @@ app.use(cors())
 app.use(express.json())
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet } = require("jose-cjs");
 
 const port = process.env.PORT
 const uri = process.env.MONGODB_URI;
-
-
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -24,6 +23,42 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+
+const JWKS = createRemoteJWKSet(
+    new URL('http://localhost:3000/api/auth/jwks')
+)
+
+
+const verifyToken = async (req, res, next) => {
+    const token = req?.headers?.authorization;
+    console.log('token with headers', token);
+
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    const tokenParts = token?.split(' ')[1];
+    console.log('token parts', tokenParts);
+
+    if (!tokenParts) {
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+    try {
+        const { payload } = await jwtVerify(tokenParts, JWKS)
+        console.log('payload', payload);
+        next();
+    }
+    catch (error) {
+        console.log('token is not verify', error);
+        return res.status(401).send({ message: 'Unauthorized' });
+    }
+
+
+}
+
+
 
 async function run() {
     try {
@@ -46,7 +81,7 @@ async function run() {
         });
 
         //find one sport
-        app.get('/sports/:id', async (req, res) => {
+        app.get('/sports/:id', verifyToken, async (req, res) => {
             const { id } = req.params;
             const sport = await sportsCollection.findOne({ _id: new ObjectId(id) });
             res.send(sport);
