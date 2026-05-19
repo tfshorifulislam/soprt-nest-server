@@ -11,7 +11,7 @@ app.use(cors())
 app.use(express.json())
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { createRemoteJWKSet } = require("jose-cjs");
+const { jwtVerify, createRemoteJWKSet } = require('jose-cjs');
 
 const port = process.env.PORT
 const uri = process.env.MONGODB_URI;
@@ -66,6 +66,7 @@ async function run() {
 
         const db = client.db("sport-nest-server");
         const sportsCollection = db.collection("sports");
+        const bookingCollection = db.collection("bookings");
 
         //add facility data to database
         app.post('/sports', async (req, res) => {
@@ -85,6 +86,13 @@ async function run() {
             const { id } = req.params;
             const sport = await sportsCollection.findOne({ _id: new ObjectId(id) });
             res.send(sport);
+        });
+
+        //booking system
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            const result = await bookingCollection.insertOne(booking);
+            res.send(result);
         });
 
         await client.db("admin").command({ ping: 1 });
