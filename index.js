@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 
 
 const JWKS = createRemoteJWKSet(
-    new URL('http://localhost:3000/api/auth/jwks')
+    new URL(`${process.env.CLIENT_URL}/api/auth/jwks`)
 )
 
 
@@ -70,28 +70,28 @@ async function run() {
         const bookingCollection = db.collection("bookings");
 
         //add facility data to database
-        app.post('/sports', async (req, res) => {
+        app.post('/sports', verifyToken, async (req, res) => {
             const sport = req.body;
             const result = await sportsCollection.insertOne(sport);
             res.send(result);
         });
 
         //find one sport
-        app.get('/sports/:id', async (req, res) => {
+        app.get('/sports/:id', verifyToken, async (req, res) => {
             const { id } = req.params;
             const sport = await sportsCollection.findOne({ _id: new ObjectId(id) });
             res.send(sport);
         });
 
         //booking system
-        app.post('/bookings', async (req, res) => {
+        app.post('/bookings', verifyToken, async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking);
             res.send(result);
         });
 
         //user booking list find
-        app.get('/bookings/:userId', async (req, res) => {
+        app.get('/bookings/:userId', verifyToken, async (req, res) => {
             const { userId } = req.params;
             const bookings = await bookingCollection.find({ userId: userId }).toArray();
             res.send(bookings);
@@ -99,14 +99,14 @@ async function run() {
 
 
         //delete booking from my bookings
-        app.delete('/bookings/:id', async (req, res) => {
+        app.delete('/bookings/:id', verifyToken, async (req, res) => {
             const { id } = req.params;
             const booking = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
             res.send(booking);
         })
 
         //manage facilities update
-        app.patch('/bookings/:id', async (req, res) => {
+        app.patch('/bookings/:id', verifyToken, async (req, res) => {
             const { id } = req.params;
             const booking = req.body;
             const result = await bookingCollection.updateOne({ _id: new ObjectId(id) }, { $set: booking });
@@ -114,7 +114,7 @@ async function run() {
         })
 
         //manage facilities delete
-        app.delete('/bookings/:id', async (req, res) => {
+        app.delete('/bookings/:id', verifyToken, async (req, res) => {
             const { id } = req.params;
             const result = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
             res.send(result);
@@ -122,8 +122,6 @@ async function run() {
 
 
         // FIND ALL SPORTS + SEARCH
-
-
         app.get("/sports", async (req, res) => {
 
             const search = req.query.search?.trim() || "";
@@ -171,7 +169,7 @@ async function run() {
         });
 
 
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // await client.close();
