@@ -26,7 +26,7 @@ Sport Nest Server handles authentication, sports facility management, and bookin
 - cors
 
 ## 📦 Installation
-git clone https://github.com/your-username/sport-nest-server.git  
+git clone https://github.com/tfshorifulislam/sport-nest-server.git  
 cd sport-nest-server  
 npm install  
 
