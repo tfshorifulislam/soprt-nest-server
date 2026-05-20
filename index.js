@@ -70,17 +70,17 @@ async function run() {
         const bookingCollection = db.collection("bookings");
 
         //add facility data to database
-        app.post('/sports',  async (req, res) => {
+        app.post('/sports', async (req, res) => {
             const sport = req.body;
             const result = await sportsCollection.insertOne(sport);
             res.send(result);
         });
 
-        //find all sports
-        app.get('/sports', async (req, res) => {
-            const sports = await sportsCollection.find().toArray();
-            res.send(sports);
-        });
+        // //find all sports
+        // app.get('/sports', async (req, res) => {
+        //     const sports = await sportsCollection.find().toArray();
+        //     res.send(sports);
+        // });
 
         //find one sport
         app.get('/sports/:id', async (req, res) => {
@@ -90,7 +90,7 @@ async function run() {
         });
 
         //booking system
-        app.post('/bookings',async (req, res) => {
+        app.post('/bookings', async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking);
             res.send(result);
@@ -125,6 +125,42 @@ async function run() {
             const result = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
             res.send(result);
         })
+
+
+        // FIND ALL SPORTS + SEARCH
+        app.get("/sports", async (req, res) => {
+
+            const search = req.query.search?.trim() || "";
+
+            const query = search
+                ? {
+                    $or: [
+                        {
+                            name: {
+                                $regex: search,
+                                $options: "i",
+                            },
+                        },
+                        {
+                            type: {
+                                $regex: search,
+                                $options: "i",
+                            },
+                        },
+                        {
+                            location: {
+                                $regex: search,
+                                $options: "i",
+                            },
+                        },
+                    ],
+                }
+                : {};
+
+            const result = await sportsCollection.find(query).toArray();
+
+            res.send(result);
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
