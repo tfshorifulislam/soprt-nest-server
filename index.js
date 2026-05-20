@@ -112,13 +112,19 @@ async function run() {
         })
 
         //manage facilities update
-        app.patch('/sports/:id', async (req, res) => {
+        app.patch('/bookings/:id', async (req, res) => {
             const { id } = req.params;
-            const sport = req.body;
-            const result = await sportsCollection.updateOne({ _id: new ObjectId(id) }, { $set: sport });
+            const booking = req.body;
+            const result = await bookingCollection.updateOne({ _id: new ObjectId(id) }, { $set: booking });
             res.send(result);
         })
 
+        //manage facilities delete
+        app.delete('/bookings/:id', async (req, res) => {
+            const { id } = req.params;
+            const result = await bookingCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
