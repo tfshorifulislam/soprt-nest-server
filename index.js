@@ -76,12 +76,6 @@ async function run() {
             res.send(result);
         });
 
-        // //find all sports
-        // app.get('/sports', async (req, res) => {
-        //     const sports = await sportsCollection.find().toArray();
-        //     res.send(sports);
-        // });
-
         //find one sport
         app.get('/sports/:id', async (req, res) => {
             const { id } = req.params;
@@ -128,39 +122,54 @@ async function run() {
 
 
         // FIND ALL SPORTS + SEARCH
+
+
         app.get("/sports", async (req, res) => {
 
             const search = req.query.search?.trim() || "";
+            const types = req.query.types?.trim() || "";
 
-            const query = search
-                ? {
-                    $or: [
-                        {
-                            name: {
-                                $regex: search,
-                                $options: "i",
-                            },
+            let query = {};
+
+            // SEARCH
+            if (search) {
+                query.$or = [
+                    {
+                        name: {
+                            $regex: search,
+                            $options: "i",
                         },
-                        {
-                            type: {
-                                $regex: search,
-                                $options: "i",
-                            },
+                    },
+                    {
+                        type: {
+                            $regex: search,
+                            $options: "i",
                         },
-                        {
-                            location: {
-                                $regex: search,
-                                $options: "i",
-                            },
+                    },
+                    {
+                        location: {
+                            $regex: search,
+                            $options: "i",
                         },
-                    ],
-                }
-                : {};
+                    },
+                ];
+            }
+
+           
+            if (types) {
+                query.type = {
+                    $regex: `^${types}$`,
+                    $options: "i",
+                };
+            }
+
+            console.log(query);
 
             const result = await sportsCollection.find(query).toArray();
 
             res.send(result);
         });
+
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
